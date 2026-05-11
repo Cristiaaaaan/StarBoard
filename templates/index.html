@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarBoard - Starlink Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    <path d="M2 12h20"/>
+                </svg>
+                <h1>StarBoard</h1>
+            </div>
+            <div class="header-controls">
+                <!-- Speedtest Frequency Selector -->
+                <div class="speedtest-freq-selector" id="speedtestFreqSelector">
+                    <button class="freq-btn" data-interval="30" onclick="setSpeedtestInterval(30)">30s</button>
+                    <button class="freq-btn active" data-interval="60" onclick="setSpeedtestInterval(60)">1m</button>
+                    <button class="freq-btn" data-interval="120" onclick="setSpeedtestInterval(120)">2m</button>
+                    <button class="freq-btn" data-interval="300" onclick="setSpeedtestInterval(300)">5m</button>
+                </div>
+                <!-- Language Selector -->
+                <div class="language-tabs" id="languageTabs">
+                    <button class="lang-tab active" data-lang="it" onclick="setLanguage('it')">IT</button>
+                    <button class="lang-tab" data-lang="en" onclick="setLanguage('en')">EN</button>
+                    <button class="lang-tab" data-lang="es" onclick="setLanguage('es')">ES</button>
+                </div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Cambia tema">
+                    <svg class="theme-icon sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                    <svg class="theme-icon moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                    <svg class="theme-icon cyber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="4" y="4" width="16" height="16" rx="2"/>
+                        <rect x="9" y="9" width="6" height="6"/>
+                        <path d="M9 1h6v2H9z"/>
+                        <path d="M9 21h6v2H9z"/>
+                        <path d="M1 9h2v6H1z"/>
+                        <path d="M21 9h2v6h-2z"/>
+                    </svg>
+                </button>
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span class="status-text" id="statusText">Connessione...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <main class="dashboard">
+            <!-- Speed Section -->
+            <section class="card speed-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    <span class="title-source-dot speedtest" id="speedTitleDot" title="Dati speedtest"></span>
+                </h2>
+                <div class="toggle-label">Velocità dal dispositivo a Internet</div>
+                <div class="speed-grid">
+                    <div class="speed-item">
+                        <div class="speed-value" id="downloadSpeed">--</div>
+                        <div class="speed-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12l7 7 7-7"/>
+                            </svg>
+                            Download
+                        </div>
+                        <div class="speed-unit">Mbps</div>
+                    </div>
+                    <div class="speed-divider"></div>
+                    <div class="speed-item">
+                        <div class="speed-value" id="uploadSpeed">--</div>
+                        <div class="speed-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 19V5M5 12l7-7 7 7"/>
+                            </svg>
+                            Upload
+                        </div>
+                        <div class="speed-unit">Mbps</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Averages Card -->
+            <section class="card averages-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                    </svg>
+                    <span class="title-source-dot" id="averagesTitleDot" title="Medie storiche"></span>
+                </h2>
+                <div class="averages-grid">
+                    <div class="average-item">
+                        <div class="average-label">Download Medio</div>
+                        <div class="average-value" id="downloadAvgCard">--</div>
+                        <div class="average-unit">Mbps</div>
+                    </div>
+                    <div class="average-item">
+                        <div class="average-label">Upload Medio</div>
+                        <div class="average-value" id="uploadAvgCard">--</div>
+                        <div class="average-unit">Mbps</div>
+                    </div>
+                    <div class="average-item">
+                        <div class="average-label">Latenza Media</div>
+                        <div class="average-value" id="latencyAvgCard">--</div>
+                        <div class="average-unit">ms</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Latency Card -->
+            <section class="card latency-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span class="title-source-dot" id="latencyTitleDot" title="Dati reali"></span>
+                </h2>
+                <div class="metric-large">
+                    <span class="metric-value" id="latency">--</span>
+                    <span class="metric-unit">ms</span>
+                </div>
+                <div class="latency-bar">
+                    <div class="latency-fill" id="latencyFill"></div>
+                </div>
+                <div class="latency-labels">
+                    <span>Buona</span>
+                    <span>Eccellente</span>
+                </div>
+            </section>
+
+            <!-- History Chart Card -->
+            <section class="card history-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    <span class="title-source-dot" id="historyTitleDot" title="Dati storici"></span>
+                </h2>
+                <div class="chart-tabs">
+                    <button class="chart-tab active" data-chart="speed">Velocità</button>
+                    <button class="chart-tab" data-chart="latency">Latenza</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="historyChart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item" id="downloadLegend">
+                        <span class="legend-color download"></span>
+                        <span>Download</span>
+                        <span class="legend-value" id="downloadAvg">-- Mbps</span>
+                    </div>
+                    <div class="legend-item" id="uploadLegend">
+                        <span class="legend-color upload"></span>
+                        <span>Upload</span>
+                        <span class="legend-value" id="uploadAvg">-- Mbps</span>
+                    </div>
+                    <div class="legend-item hidden" id="latencyLegend">
+                        <span class="legend-color latency"></span>
+                        <span>Latenza</span>
+                        <span class="legend-value" id="latencyAvg">-- ms</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Uptime Card -->
+            <section class="card uptime-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                    <span class="title-source-dot" id="uptimeTitleDot" title="Dati reali"></span>
+                </h2>
+                <div class="uptime-display">
+                    <div class="uptime-value" id="uptime">--</div>
+                    <div class="uptime-label">
+                        Tempo di attività
+                    </div>
+                </div>
+            </section>
+
+            <!-- Signal Quality -->
+            <section class="card signal-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 20h.01M7 20v-4m5 4v-8m5 8V8m5-4v16"/>
+                    </svg>
+                    <span class="title-source-dot" id="signalTitleDot" title="Dati misti"></span>
+                </h2>
+                <div class="signal-grid">
+                    <div class="signal-item">
+                        <div class="signal-ring">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path class="circle" id="snrCircle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="signal-value" id="snrValue">--</div>
+                        </div>
+                        <div class="signal-label">
+                            SNR
+                        </div>
+                    </div>
+                    <div class="signal-item">
+                        <div class="signal-ring">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path class="circle" id="obstructionCircle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="signal-value" id="obstructionValue">--</div>
+                        </div>
+                        <div class="signal-label">
+                            Ostruzione
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Obstruction Status -->
+            <section class="card obstruction-status-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span class="title-source-dot" id="obstructionStatusTitleDot" title="Dati reali"></span>
+                </h2>
+                <div class="obstruction-status" id="obstructionStatus">
+                    <div class="obstruction-indicator" id="obstructionIndicator">
+                        <span class="obstruction-dot"></span>
+                    </div>
+                    <div class="obstruction-text" id="obstructionText">--</div>
+                </div>
+            </section>
+
+            <!-- Ping Statistics -->
+            <section class="card ping-stats-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20V10"/>
+                        <path d="M18 20V4"/>
+                        <path d="M6 20v-4"/>
+                    </svg>
+                    <span class="title-source-dot" id="pingTitleDot" title="Dati reali"></span>
+                </h2>
+                <div class="ping-deciles" id="pingDeciles">
+                    <!-- Decili generati da JS -->
+                </div>
+                <div class="ping-samples-info">
+                    <span class="samples-label">Campioni:</span>
+                    <span class="samples-value" id="pingSamples">--</span>
+                </div>
+            </section>
+
+            <!-- 24h Obstructions -->
+            <section class="card obstruction-24h-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span class="title-source-dot" id="obstruction24hTitleDot" title="Dati simulati"></span>
+                </h2>
+                <div class="obstruction-24h-display">
+                    <div class="obstruction-24h-value" id="obstruction24h">--</div>
+                    <div class="obstruction-24h-label">
+                        Tempo totale ostruzioni
+                    </div>
+                </div>
+                <div class="obstruction-24h-events">
+                    <span class="events-label">Eventi:</span>
+                    <span class="events-value" id="obstructionEvents">--</span>
+                </div>
+                <div class="obstruction-24h-last">
+                    <span class="last-label">Ultima:</span>
+                    <span class="last-value" id="lastObstruction">--</span>
+                </div>
+                <div class="obstruction-24h-bar">
+                    <div class="obstruction-24h-fill" id="obstruction24hFill"></div>
+                </div>
+            </section>
+
+            <!-- Satellites -->
+            <section class="card satellites-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3 7h7l-5.5 4 2 7-6.5-5-6.5 5 2-7L2 9h7z"/>
+                    </svg>
+                    <span class="title-source-dot" id="satellitesTitleDot" title="Dati reali"></span>
+                </h2>
+                <div class="satellites-display">
+                    <div class="satellites-count" id="satellites">--</div>
+                    <div class="satellites-label">
+                        Connessi
+                    </div>
+                </div>
+                <div class="satellites-visual" id="satellitesVisual">
+                    <!-- Punti satelliti generati da JS -->
+                </div>
+            </section>
+
+            <!-- Dish Position -->
+            <section class="card position-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>
+                    </svg>
+                    <span class="title-source-dot" id="positionTitleDot" title="Dati reali"></span>
+                </h2>
+                <div class="position-compass">
+                    <div class="compass-ring">
+                        <div class="compass-marker" id="compassMarker"></div>
+                        <div class="compass-labels">
+                            <span class="compass-n">N</span>
+                            <span class="compass-e">E</span>
+                            <span class="compass-s">S</span>
+                            <span class="compass-w">O</span>
+                        </div>
+                    </div>
+                    <div class="position-values">
+                        <div class="position-item">
+                            <span class="position-label">Azimuth</span>
+                            <span class="position-value" id="azimuth">--°</span>
+                        </div>
+                        <div class="position-item">
+                            <span class="position-label">Elevazione</span>
+                            <span class="position-value" id="elevation">--°</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Info -->
+            <section class="card system-card">
+                <h2 class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <span class="title-source-dot" id="systemTitleDot" title="Dati reali"></span>
+                </h2>
+                <div class="system-grid">
+                    <div class="system-item">
+                        <span class="system-label">Hardware</span>
+                        <span class="system-value" id="hardwareVersion">--</span>
+                    </div>
+                    <div class="system-item">
+                        <span class="system-label">Software</span>
+                        <span class="system-value" id="softwareVersion">--</span>
+                    </div>
+                    <div class="system-item">
+                        <span class="system-label">Packet Loss</span>
+                        <span class="system-value" id="packetLoss">--%</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <span>Ultimo aggiornamento: <span id="lastUpdate">--</span></span>
+            <span class="refresh-rate">Aggiornamento ogni 1s</span>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
