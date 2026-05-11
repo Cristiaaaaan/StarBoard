@@ -55,6 +55,10 @@ If the dish is unreachable, the dashboard uses realistic simulated data automati
 - **Frontend:** Vanilla JS, Chart.js, CSS Grid/Flexbox
 - **Data sources:** gRPC (primary), HTTP API (fallback), speedtest-cli
 
+## Author
+
+- [@Cristiaaaaan](https://github.com/Cristiaaaaan)
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
